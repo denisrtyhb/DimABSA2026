@@ -29,6 +29,12 @@ def read_jsonl_file(file_path, task = 3, data_type = 'pred'):
     output_key = key_name[task]
     input_key = key_name[3] if (data_type == 'gold' and task ==2) else key_name[task] 
     
+    print("Reading file: ", file_path)
+    print("Task: ", task)
+    print("Data type: ", data_type)
+    print("Output key: ", output_key)
+    print("Input key: ", input_key)
+
     data = []
     if not os.path.exists(file_path):
         print(f"Error: File '{file_path}' does not exist.")
@@ -70,8 +76,10 @@ def read_jsonl_file(file_path, task = 3, data_type = 'pred'):
                             aspect = quad.get('Aspect', 'Unknown_Aspect')
                             category = quad.get('Category', 'Unknown_Category')
                             opinion = quad.get('Opinion', 'Unknown_Opinion')
+
                             va = quad.get('VA', '0.00#0.00') # Default value if VA is missing
                             if va == '0.00#0.00':
+                                print("Quadruplet: ", quad['VA'])
                                 exit("Error: VA value is missing!")
                             if aspect == 'Unknown_Aspect':
                                 exit(f"Error: {input_key}-Aspect value is missing!")
@@ -293,7 +301,10 @@ def convert_task1_data(gold_data, pred_data):
                 # pred_v.append(0)
                 # pred_a.append(0)
             # continue
-            exit("Error: VA value is missing!")
+            print("Key: ", key)
+            # print("Gold value: ", gold_value)
+            # print("Pred data: ", pred_data.keys())
+            exit("Error: VA value is missing in gold data!")
         pred_value = pred_data[key]["Aspect_VA"]
         pred_value = {entry['Aspect']: entry for entry in pred_value}
         for item in gold_value:
