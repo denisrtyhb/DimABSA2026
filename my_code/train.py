@@ -89,7 +89,7 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default="eng",
         help=(
-            "Language subfolder, or 'all' → train/dev: eng,jpn,rus,tat,ukr,zho (use test.py for final_eval)"
+            "Language subfolder, or 'all' → train/dev: eng,jpn,rus,tat,ukr,zho (use test.py for test-mode evaluation)"
         ),
     )
     return parser.parse_args()
