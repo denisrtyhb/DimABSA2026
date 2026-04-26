@@ -131,6 +131,12 @@ def _pearson_corr(xs: Sequence[float], ys: Sequence[float]) -> float:
     return num / math.sqrt(den_x * den_y)
 
 
+def maybe_scale_predictions(preds: torch.Tensor, *, scale_predictions: bool) -> torch.Tensor:
+    if not scale_predictions:
+        return preds
+    return 4.0 * torch.tanh(preds) + 5.0
+
+
 def _run_test_inference_for_lang(
     model: BertVARegressor,
     device: torch.device,
@@ -140,6 +146,7 @@ def _run_test_inference_for_lang(
     num_workers: int,
     max_length: int,
     lang: str,
+    scale_predictions: bool,
 ) -> dict[str, float]:
     test_rows = cast(
         List[Tuple[str, str, str, Tuple[float, float], str]],
@@ -177,6 +184,7 @@ def _run_test_inference_for_lang(
                 attention_mask=attention_mask,
                 token_type_ids=token_type_ids,
             )
+            preds = maybe_scale_predictions(preds, scale_predictions=scale_predictions)
             for row in range(preds.size(0)):
                 row_cpu = preds[row].detach().cpu()
                 pred_strings.append(_format_va(row_cpu))
@@ -287,6 +295,11 @@ def parse_args() -> argparse.Namespace:
             "Language subfolder for test mode (e.g. eng), or 'all' to evaluate all supported test languages."
         ),
     )
+    parser.add_argument(
+        "--scale_predictions",
+        action="store_true",
+        help="Scale raw model outputs from (-inf, +inf) to [1, 9] using 4*tanh(x)+5.",
+    )
     return parser.parse_args()
 
 
@@ -314,6 +327,7 @@ def main() -> None:
             num_workers=args.num_workers,
             max_length=args.max_length,
             lang=eval_lang,
+            scale_predictions=args.scale_predictions,
         )
     _append_results(args.name, lang_metrics)
 

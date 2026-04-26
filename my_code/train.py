@@ -92,6 +92,11 @@ def parse_args() -> argparse.Namespace:
             "Language subfolder, or 'all' → train/dev: eng,jpn,rus,tat,ukr,zho (use test.py for test-mode evaluation)"
         ),
     )
+    parser.add_argument(
+        "--scale_predictions",
+        action="store_true",
+        help="Scale raw model outputs from (-inf, +inf) to [1, 9] using 4*tanh(x)+5.",
+    )
     return parser.parse_args()
 
 
@@ -124,6 +129,12 @@ def resolve_device(device_arg: str) -> torch.device:
     raise ValueError(
         f"Unsupported device '{device_arg}'. Use one of: auto, cpu, cuda, cuda:N, mps."
     )
+
+
+def maybe_scale_predictions(preds: torch.Tensor, *, scale_predictions: bool) -> torch.Tensor:
+    if not scale_predictions:
+        return preds
+    return 4.0 * torch.tanh(preds) + 5.0
 
 
 def train() -> None:
@@ -181,6 +192,7 @@ def train() -> None:
                 attention_mask=attention_mask,
                 token_type_ids=token_type_ids,
             )
+            preds = maybe_scale_predictions(preds, scale_predictions=args.scale_predictions)
             loss = criterion(preds, labels)
             loss.backward()
             optimizer.step()
@@ -208,6 +220,7 @@ def train() -> None:
                     attention_mask=attention_mask,
                     token_type_ids=token_type_ids,
                 )
+                preds = maybe_scale_predictions(preds, scale_predictions=args.scale_predictions)
                 eval_loss = criterion(preds, labels)
                 eval_running_loss += eval_loss.item()
                 eval_progress.set_postfix(loss=f"{eval_loss.item():.4f}")
