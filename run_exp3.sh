@@ -4,6 +4,6 @@ python my_code/train.py --model_name bert-base-multilingual-cased \
     --lr 2e-5 \
     --max_length 256 \
     --device cuda \
-    --name exp2 \
+    --name exp3 \
     --lang all \
     --scale_predictions
